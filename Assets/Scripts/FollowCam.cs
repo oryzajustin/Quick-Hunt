@@ -17,6 +17,13 @@ public class FollowCam : MonoBehaviour
     private float yaw;
     private float pitch;
 
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+    }
+
     private void LateUpdate()
     {
         yaw += Input.GetAxis("Mouse X") * mouse_sensitivity;
