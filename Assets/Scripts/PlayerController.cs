@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviourPun
 {
     [SerializeField] Hunter hunter;
     [SerializeField] IKSolver ik_solver;
@@ -46,7 +47,10 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        MovePlayer();
+        if (photonView.IsMine)
+        {
+            MovePlayer();
+        }
     }
 
     private void MovePlayer()

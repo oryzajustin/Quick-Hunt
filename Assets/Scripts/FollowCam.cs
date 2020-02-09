@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class FollowCam : MonoBehaviour
+public class FollowCam : MonoBehaviourPun
 {
     [SerializeField] float mouse_sensitivity;
-    [SerializeField] Transform target;
+    public Transform target;
     [SerializeField] float distance_from_target;
     [SerializeField] Vector2 pitch_min_max;
 
@@ -21,10 +22,14 @@ public class FollowCam : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
     }
 
     private void LateUpdate()
+    {
+        MoveCamera();
+    }
+
+    private void MoveCamera()
     {
         yaw += Input.GetAxis("Mouse X") * mouse_sensitivity;
         pitch -= Input.GetAxis("Mouse Y") * mouse_sensitivity;
