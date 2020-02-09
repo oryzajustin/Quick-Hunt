@@ -91,8 +91,6 @@ public class PlayerController : MonoBehaviour
 
         velocity_y += gravity * Time.deltaTime; // account gravity
 
-        Debug.Log(velocity_y);
-
         Vector3 velocity = this.transform.forward * curr_speed + Vector3.up * velocity_y; // velocity
 
         controller.Move(velocity * Time.deltaTime);
