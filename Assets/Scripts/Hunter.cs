@@ -32,8 +32,9 @@ public class Hunter : MonoBehaviour
     public void ThrowSpear()
     {
         spear.spear_rb.isKinematic = false;
+        spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
-        spear.spear_rb.AddForce(spear_go.transform.forward * throw_power, ForceMode.Impulse);
+        spear.spear_rb.AddForce(spear_go.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
         has_spear = false;
     }
 

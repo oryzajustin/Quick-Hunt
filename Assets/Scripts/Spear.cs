@@ -31,6 +31,8 @@ public class Spear : MonoBehaviour
     {
         if(collision.gameObject.tag != "Player")
         {
+            spear_rb.Sleep();
+            spear_rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             spear_rb.isKinematic = true;
             can_pick_up = true;
         }
