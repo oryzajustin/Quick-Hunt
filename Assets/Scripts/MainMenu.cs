@@ -40,6 +40,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
         find_players_button.onClick.AddListener(delegate { FindPlayers(); });
         name_continue_button.onClick.AddListener(delegate { SavePlayerName(); });
         start_button.onClick.AddListener(delegate { StartMatch(); });
+        start_button.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -99,6 +100,8 @@ public class MainMenu : MonoBehaviourPunCallbacks
         Debug.Log(PhotonNetwork.IsMasterClient);
         int player_count = PhotonNetwork.CurrentRoom.PlayerCount;
 
+        Debug.Log(player_count);
+
         if(player_count < 2)
         {
             waiting_status_text.text = "Waiting for other players...";
@@ -111,10 +114,6 @@ public class MainMenu : MonoBehaviourPunCallbacks
             {
                 waiting_status_text.text = player_count + " Players found! ";
                 Debug.Log("More players can join; Match is ready");
-                if (PhotonNetwork.IsMasterClient && photonView.IsMine)
-                {
-                    start_button.interactable = true;
-                }
             }
             else
             {
@@ -138,13 +137,12 @@ public class MainMenu : MonoBehaviourPunCallbacks
         else
         {
             Debug.Log("Match is ready; but not full");
-            Debug.Log(PhotonNetwork.IsMasterClient);
             waiting_status_text.text = PhotonNetwork.CurrentRoom.PlayerCount + " Players found!";
-            if (PhotonNetwork.IsMasterClient) // only master client can start the match
+            if (PhotonNetwork.IsMasterClient)
             {
+                start_button.gameObject.SetActive(true);
                 start_button.interactable = true;
             }
-            
         }
     }
 

@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class BunnyController : MonoBehaviour
+public class BunnyController : MonoBehaviourPun
 {
     [SerializeField] float walk_speed;
     [SerializeField] float run_speed;
@@ -31,12 +32,16 @@ public class BunnyController : MonoBehaviour
     {
         //animator = this.GetComponent<Animator>();
         controller = this.GetComponent<CharacterController>();
+        camera_transform = Camera.main.transform;
     }
 
     // Update is called once per frame
     void Update()
     {
-        MovePlayer();
+        if (photonView.IsMine)
+        {
+            MovePlayer();
+        }
     }
 
     private void MovePlayer()

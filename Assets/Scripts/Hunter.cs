@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class Hunter : MonoBehaviour
+public class Hunter : MonoBehaviourPun
 {
     [Header("Spear Settings")]
     [SerializeField] GameObject spear_go;
@@ -25,7 +26,8 @@ public class Hunter : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
-            ReturnSpear(spear_go);
+            //ReturnSpear(spear_go);
+            photonView.RPC("ReturnSpear", RpcTarget.All);
         }
     }
 
@@ -37,12 +39,18 @@ public class Hunter : MonoBehaviour
         spear.spear_rb.AddForce(spear_go.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
         has_spear = false;
     }
-
-    public void ReturnSpear(GameObject spear)
+    
+    [PunRPC]
+    public void ReturnSpear()
     {
-        spear.transform.position = right_hand.position;
-        spear.transform.rotation = right_hand.rotation;
-        spear.transform.parent = right_hand;
+        spear_go.transform.position = right_hand.position;
+        spear_go.transform.rotation = right_hand.rotation;
+        spear_go.transform.parent = right_hand;
         has_spear = true;
+    }
+
+    public void ReturnSpearWrapper()
+    {
+        photonView.RPC("ReturnSpear", RpcTarget.All);
     }
 }

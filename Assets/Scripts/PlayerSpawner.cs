@@ -10,7 +10,7 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] FollowCam follow_cam;
     private void Start()
     {
-        if (GameObject.FindGameObjectWithTag("Player") == null)
+        if (PhotonNetwork.IsMasterClient)
         {
             GameObject player = PhotonNetwork.Instantiate(hunter_prefab.name, Vector3.zero, Quaternion.identity);
             follow_cam.target = player.transform.Find("Look_Target");
@@ -20,6 +20,5 @@ public class PlayerSpawner : MonoBehaviour
             GameObject player = PhotonNetwork.Instantiate(bunny_prefab.name, Vector3.zero, Quaternion.identity);
             follow_cam.target = player.transform.Find("Look_Target");
         }
-        
     }
 }
