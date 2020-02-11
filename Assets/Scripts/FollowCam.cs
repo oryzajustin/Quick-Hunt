@@ -22,6 +22,11 @@ public class FollowCam : MonoBehaviourPun
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        if(target.GetComponent<Bunny>() != null)
+        {
+            pitch_min_max.x = -5;
+            pitch_min_max.y = 80;
+        }
     }
 
     private void LateUpdate()

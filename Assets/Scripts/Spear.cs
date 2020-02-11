@@ -25,6 +25,7 @@ public class Spear : MonoBehaviourPun
         {
             can_pick_up = false;
             hunter.has_spear = true;
+            this.GetComponent<PhotonRigidbodyView>().enabled = false;
         }
         return_position = hunter.right_hand;
     }
@@ -59,12 +60,10 @@ public class Spear : MonoBehaviourPun
             if(remaining_health <= 0)
             {
                 bunny.SetHealth(remaining_health);
-                SkewerBunny(bunny);
+                bunny.spear_go = this.gameObject;
+                bunny.SkewerBunnyWrapper();
                 // make bunny ghost mode
-                bunny.transform.GetChild(0).GetComponent<MeshRenderer>().enabled = false;
-                bunny.GetComponent<CharacterController>().enabled = false;
-                bunny.GetComponent<BunnyController>().enabled = false;
-                bunny.GetComponent<GhostMode>().enabled = true;
+                bunny.MakeGhostWrapper();
                 bunny.Die();
             }
         }
@@ -78,23 +77,5 @@ public class Spear : MonoBehaviourPun
             hunter.ReturnSpearWrapper();
             can_pick_up = false;
         }   
-    }
-    public void SkewerBunny(Bunny bunny)
-    {
-        // skewer the bunny
-        spear_rb.Sleep(); // put the RB to sleep to stop weird physics
-        
-        
-        
-        //photonView.RPC("SkewerFake", RpcTarget.All); // giving problems
-    }
-
-    [PunRPC]
-    public void SkewerFake()
-    {
-        Debug.Log("SKEWER");
-        GameObject temp = Instantiate(fake_bunny_prefab, this.transform.position, Quaternion.identity, this.transform);
-        Vector3 skewer_position = new Vector3(this.transform.position.x, this.transform.position.y - 0.15f, this.transform.position.z);
-        temp.transform.position = skewer_position;
     }
 }

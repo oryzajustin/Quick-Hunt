@@ -33,6 +33,9 @@ public class Hunter : MonoBehaviourPun
 
     public void ThrowSpear()
     {
+        // only start syncronizing the spear RB when it is thrown this prevents the spear from wandering from the hunter's hand on other photon views.
+        spear.GetComponent<PhotonRigidbodyView>().enabled = true; 
+
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
@@ -47,6 +50,9 @@ public class Hunter : MonoBehaviourPun
         spear_go.transform.rotation = right_hand.rotation;
         spear_go.transform.parent = right_hand;
         has_spear = true;
+
+        // disable syncronizing the spear RB when it is held, this prevents the spear from wandering from the hunter's hand on other photon views.
+        spear.GetComponent<PhotonRigidbodyView>().enabled = false;
     }
 
     public void ReturnSpearWrapper()

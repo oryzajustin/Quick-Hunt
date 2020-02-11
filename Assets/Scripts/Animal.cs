@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 
-public class Animal : MonoBehaviour
+public class Animal : MonoBehaviourPun
 {
     private int health;
     private int damage;
