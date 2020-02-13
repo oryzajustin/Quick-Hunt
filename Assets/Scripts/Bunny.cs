@@ -55,6 +55,8 @@ public class Bunny : Animal
             this.GetComponent<CharacterController>().enabled = false;
             this.GetComponent<BunnyController>().enabled = false;
             this.GetComponent<GhostMode>().enabled = true;
+            this.GetComponent<BoxCollider>().enabled = true; // collider for ghost mode
+            Camera.main.GetComponent<FollowCam>().pitch_min_max.x = -25f;
         }
     }
 

@@ -8,7 +8,7 @@ public class FollowCam : MonoBehaviourPun
     [SerializeField] float mouse_sensitivity;
     public Transform target;
     [SerializeField] float distance_from_target;
-    [SerializeField] Vector2 pitch_min_max;
+    public Vector2 pitch_min_max;
 
     [SerializeField] float rotation_smooth_time;
 
@@ -22,9 +22,9 @@ public class FollowCam : MonoBehaviourPun
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        if(target.GetComponent<Bunny>() != null)
+        if(!PhotonNetwork.IsMasterClient)
         {
-            pitch_min_max.x = -5;
+            pitch_min_max.x = 0;
             pitch_min_max.y = 80;
         }
     }
