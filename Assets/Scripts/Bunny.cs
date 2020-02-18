@@ -8,6 +8,7 @@ public enum Gender
     male,
     female
 }
+
 public class Bunny : Animal
 {
     private Gender gender;

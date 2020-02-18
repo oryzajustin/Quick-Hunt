@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public class Animal : MonoBehaviourPun
 {
