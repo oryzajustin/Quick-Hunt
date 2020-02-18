@@ -30,7 +30,6 @@ public class Hunter : MonoBehaviourPun
 
     [SerializeField] ParticleSystem trail;
     private ParticleSeek particle_seek;
-    private Transform trail_target = null;
 
     private void Start()
     {
@@ -68,26 +67,10 @@ public class Hunter : MonoBehaviourPun
         if (state)
         {
             GameObject[] animals = GameObject.FindGameObjectsWithTag("Bunny");
-            for(int i = 0; i < animals.Length; i++)
+            GameObject target = GetClosestAnimal(animals);
+            if (target != null)
             {
-                //reset closest dist to ensure all targets accounted for.
-                float closestDist = 100f;
-
-                //measure distance between self and target object in list per i.
-                float dist = Vector3.Distance(gameObject.transform.position, animals[i].transform.position);
-
-                //compare distance, if distance < last closest distance measured, new closest set.
-                if (dist < closestDist)
-                {
-                    closestDist = dist;
-                    trail_target = animals[i].transform;
-                }
-
-            }
-            if (trail_target != null)
-            { 
-                particle_seek.target = trail_target;
-                //move_trail.AppendCallback(() => trail.transform.DOMove(trail_target.localPosition, 1f));
+                particle_seek.target = target.transform;
             }
         }
 
@@ -130,5 +113,23 @@ public class Hunter : MonoBehaviourPun
     public void ReturnSpearWrapper()
     {
         photonView.RPC("ReturnSpear", RpcTarget.All);
+    }
+
+    private GameObject GetClosestAnimal(GameObject[] animals)
+    {
+        GameObject bestTarget = null;
+        float closestDistanceSqr = Mathf.Infinity;
+        Vector3 currentPosition = transform.position;
+        foreach (GameObject potentialTarget in animals)
+        {
+            Vector3 directionToTarget = potentialTarget.transform.position - currentPosition;
+            float dSqrToTarget = directionToTarget.sqrMagnitude;
+            if (dSqrToTarget < closestDistanceSqr)
+            {
+                closestDistanceSqr = dSqrToTarget;
+                bestTarget = potentialTarget;
+            }
+        }
+        return bestTarget;
     }
 }

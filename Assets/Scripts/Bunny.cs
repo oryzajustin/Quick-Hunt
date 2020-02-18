@@ -29,6 +29,7 @@ public class Bunny : Animal
         {
             SetGender(Gender.female);
         }
+        spear_go = GameObject.Find("Spear");
     }
 
     public void SetGender(Gender gender)
@@ -70,6 +71,7 @@ public class Bunny : Animal
     public void SkewerBunny()
     {
         Debug.Log("SKEWERED");
+        this.gameObject.tag = "Untagged";
         GameObject temp = Instantiate(fake_bunny, spear_go.transform.position, Quaternion.identity);
         temp.transform.parent = spear_go.transform;
         Vector3 skewer_position = new Vector3(spear_go.transform.position.x, spear_go.transform.position.y - 0.15f, spear_go.transform.position.z);
