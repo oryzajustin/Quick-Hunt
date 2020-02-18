@@ -44,7 +44,7 @@ public class Bunny : Animal
 
     public void MakeGhostWrapper()
     {
-        photonView.RPC("MakeGhost", RpcTarget.All);
+        photonView.RPC("MakeGhost", RpcTarget.AllBufferedViaServer);
     }
 
     [PunRPC]
@@ -52,6 +52,8 @@ public class Bunny : Animal
     {
         // make me invisible for everyone
         this.transform.GetChild(0).GetComponent<MeshRenderer>().enabled = false;
+
+        this.gameObject.tag = "Untagged";
         if (photonView.IsMine) // only disable my controllers for me
         {
             this.GetComponent<CharacterController>().enabled = false;
@@ -64,14 +66,13 @@ public class Bunny : Animal
 
     public void SkewerBunnyWrapper()
     {
-        photonView.RPC("SkewerBunny", RpcTarget.All);
+        photonView.RPC("SkewerBunny", RpcTarget.AllBufferedViaServer);
     }
 
     [PunRPC]
     public void SkewerBunny()
     {
         Debug.Log("SKEWERED");
-        this.gameObject.tag = "Untagged";
         GameObject temp = Instantiate(fake_bunny, spear_go.transform.position, Quaternion.identity);
         temp.transform.parent = spear_go.transform;
         Vector3 skewer_position = new Vector3(spear_go.transform.position.x, spear_go.transform.position.y - 0.15f, spear_go.transform.position.z);

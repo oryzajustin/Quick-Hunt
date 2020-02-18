@@ -43,23 +43,27 @@ public class Hunter : MonoBehaviourPun
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R))
+        if (photonView.IsMine)
         {
-            //ReturnSpear(spear_go);
-            photonView.RPC("ReturnSpear", RpcTarget.All);
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                //ReturnSpear(spear_go);
+                photonView.RPC("ReturnSpear", RpcTarget.All);
+            }
+            if (Input.GetKey(KeyCode.Q)) //&& photonView.IsMine)
+            {
+                trail.Play();
+                is_hunter_mode = true;
+            }
+            else
+            {
+                trail.Stop();
+                is_hunter_mode = false;
+            }
+            // Hunter Sense
+            HunterSense(is_hunter_mode);
         }
-        if (Input.GetKey(KeyCode.Q)) //&& photonView.IsMine)
-        {
-            trail.Play();
-            is_hunter_mode = true;
-        }
-        else
-        {
-            trail.Stop();
-            is_hunter_mode = false;
-        }
-        // Hunter Sense
-        HunterSense(is_hunter_mode);
+        
     }
 
     public void HunterSense(bool state)
@@ -94,7 +98,8 @@ public class Hunter : MonoBehaviourPun
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
-        spear.spear_rb.AddForce(spear_go.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
+        spear.transform.forward = Camera.main.transform.forward;
+        spear.spear_rb.AddForce(Camera.main.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
         has_spear = false;
     }
     

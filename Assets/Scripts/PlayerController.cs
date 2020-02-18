@@ -2,11 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviourPun
 {
     [SerializeField] Hunter hunter;
     [SerializeField] IKSolver ik_solver;
+
+    [SerializeField] Canvas aim_canvas;
+
+    [SerializeField] Renderer skin;
+    [SerializeField] Color skin_color;
 
     [SerializeField] float walk_speed;
     [SerializeField] float run_speed;
@@ -31,6 +37,7 @@ public class PlayerController : MonoBehaviourPun
     private float velocity_y;
 
     private Transform camera_transform;
+    [SerializeField] Transform camera_move_to;
 
     private CharacterController controller;
 
@@ -42,6 +49,7 @@ public class PlayerController : MonoBehaviourPun
         controller = this.GetComponent<CharacterController>();
         hunter = this.GetComponent<Hunter>();
         ik_solver = this.GetComponent<IKSolver>();
+        skin_color = skin.material.color;
     }
 
     // Update is called once per frame
@@ -71,10 +79,16 @@ public class PlayerController : MonoBehaviourPun
 
         if (is_crouching) // if we are crouching
         {
+            float see_through = 0.4f;
+            skin_color.a = see_through;
             if (input_direction != Vector2.zero) // if we have input movement, then move in the walk speed
                 target_speed = walk_speed;
             else
                 target_speed = 0f; // otherwise crouch still
+        }
+        else
+        {
+            skin_color.a = 1f;
         }
 
         curr_speed = Mathf.SmoothDamp(curr_speed, target_speed, ref speed_smooth_velocity, GetModifiedSmoothTime(speed_smooth_time)); // damp to the target speed from our current speed
@@ -109,6 +123,7 @@ public class PlayerController : MonoBehaviourPun
         if (hunter.has_spear) 
         {
             bool is_aiming = Input.GetMouseButton(1);
+            aim_canvas.gameObject.SetActive(is_aiming);
             bool throw_spear = (is_aiming && Input.GetMouseButtonDown(0));
             animator.SetBool("aiming", is_aiming); // dampen the animation to the target animation
             if (throw_spear)
@@ -119,6 +134,7 @@ public class PlayerController : MonoBehaviourPun
         else
         {
             animator.SetBool("aiming", false);
+            aim_canvas.gameObject.SetActive(false);
         }
         
     }
