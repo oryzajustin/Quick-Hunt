@@ -11,8 +11,8 @@ public class PlayerController : MonoBehaviourPun
 
     [SerializeField] Canvas aim_canvas;
 
-    [SerializeField] Renderer skin;
-    [SerializeField] Color skin_color;
+    //[SerializeField] Renderer skin;
+    //[SerializeField] Color skin_color;
 
     [SerializeField] float walk_speed;
     [SerializeField] float run_speed;
@@ -49,7 +49,7 @@ public class PlayerController : MonoBehaviourPun
         controller = this.GetComponent<CharacterController>();
         hunter = this.GetComponent<Hunter>();
         ik_solver = this.GetComponent<IKSolver>();
-        skin_color = skin.material.color;
+        //skin_color = skin.material.color;
     }
 
     // Update is called once per frame
@@ -79,8 +79,8 @@ public class PlayerController : MonoBehaviourPun
 
         if (is_crouching) // if we are crouching
         {
-            float see_through = 0.4f;
-            skin_color.a = see_through;
+            //float see_through = 0.4f;
+            //skin_color.a = see_through;
             if (input_direction != Vector2.zero) // if we have input movement, then move in the walk speed
                 target_speed = walk_speed;
             else
@@ -88,7 +88,7 @@ public class PlayerController : MonoBehaviourPun
         }
         else
         {
-            skin_color.a = 1f;
+            //skin_color.a = 1f;
         }
 
         curr_speed = Mathf.SmoothDamp(curr_speed, target_speed, ref speed_smooth_velocity, GetModifiedSmoothTime(speed_smooth_time)); // damp to the target speed from our current speed

@@ -22,7 +22,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
 
     private bool is_connecting = false;
 
-    private const string game_version = "0.5";
+    private const string game_version = "0.6";
     private const int max_players = 10;
 
     private const string player_prefs_key_name = "PlayerName";

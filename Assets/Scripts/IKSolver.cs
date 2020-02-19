@@ -32,8 +32,16 @@ public class IKSolver : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
-        if (enableFeetIk == false) { return; }
+        if (enableFeetIk == false) 
+        {
+            lastPelvisPositionY = 0; // reset to avoid setting the last positions to the high/low positions when jumping off/to ledges
+            lastRightFootPositionY = 0;
+            lastLeftFootPositionY = 0;
+            return; 
+        }
         if (anim == null) { return; }
+
+        //Debug.Log($"{lastPelvisPositionY}, {lastRightFootPositionY}, {lastLeftFootPositionY}");
 
         AdjustFeetTarget(ref rightFootPosition, HumanBodyBones.RightFoot);
         AdjustFeetTarget(ref leftFootPosition, HumanBodyBones.LeftFoot);
