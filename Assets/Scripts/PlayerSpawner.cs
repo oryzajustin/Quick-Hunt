@@ -19,13 +19,13 @@ public class PlayerSpawner : MonoBehaviourPun
         {
             
             GameObject player = PhotonNetwork.Instantiate(hunter_prefab.name, spawn_point_player.position, Quaternion.identity);
-            PhotonNetwork.LocalPlayer.TagObject = player;
+            //PhotonNetwork.LocalPlayer.TagObject = player;
             follow_cam.target = player.transform.Find("Look_Target");
         }
         else
         {
             GameObject player = PhotonNetwork.Instantiate(bunny_prefab.name, spawn_point_bunny[Random.Range(0, spawn_point_bunny.Length)].position, Quaternion.identity);
-            PhotonNetwork.LocalPlayer.TagObject = player;
+            //PhotonNetwork.LocalPlayer.TagObject = player;
             follow_cam.target = player.transform.Find("Look_Target");
         }
     }

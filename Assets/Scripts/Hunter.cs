@@ -31,6 +31,8 @@ public class Hunter : MonoBehaviourPun
     [SerializeField] ParticleSystem trail;
     private ParticleSeek particle_seek;
 
+    [SerializeField] GameObject[] animals;
+
     private void Start()
     {
         spear = spear_go.GetComponent<Spear>();
@@ -43,7 +45,7 @@ public class Hunter : MonoBehaviourPun
 
     private void Update()
     {
-        if (photonView.IsMine)
+        if (PhotonNetwork.IsMasterClient && photonView.IsMine)
         {
             if (Input.GetKeyDown(KeyCode.R))
             {
@@ -66,15 +68,19 @@ public class Hunter : MonoBehaviourPun
         
     }
 
-    public void HunterSense(bool state)
+    private void HunterSense(bool state)
     {
         if (state)
         {
-            GameObject[] animals = GameObject.FindGameObjectsWithTag("Bunny");
+            animals = GameObject.FindGameObjectsWithTag("Bunny");
             GameObject target = GetClosestAnimal(animals);
             if (target != null)
             {
                 particle_seek.target = target.transform;
+            }
+            else
+            {
+                particle_seek.target = null;
             }
         }
 

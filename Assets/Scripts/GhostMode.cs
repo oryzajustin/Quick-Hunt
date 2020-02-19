@@ -21,6 +21,11 @@ public class GhostMode : MonoBehaviour
 
     private void Update()
     {
+        GhostMovement();
+    }
+
+    private void GhostMovement()
+    {
         rotation_x += Input.GetAxisRaw("Mouse X") * camera_sensitivity * Time.deltaTime;
         rotation_y += Input.GetAxisRaw("Mouse Y") * camera_sensitivity * Time.deltaTime;
         rotation_y = Mathf.Clamp(rotation_y, -90, 90);
@@ -46,12 +51,11 @@ public class GhostMode : MonoBehaviour
 
         if (Input.GetKey(KeyCode.Q))
         {
-            transform.position += cam.transform.up * climb_speed * Time.deltaTime; 
+            transform.position += cam.transform.up * climb_speed * Time.deltaTime;
         }
         if (Input.GetKey(KeyCode.E))
         {
             transform.position -= cam.transform.up * climb_speed * Time.deltaTime;
         }
     }
-
 }

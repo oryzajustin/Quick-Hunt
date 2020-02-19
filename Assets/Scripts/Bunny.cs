@@ -44,7 +44,7 @@ public class Bunny : Animal
 
     public void MakeGhostWrapper()
     {
-        photonView.RPC("MakeGhost", RpcTarget.AllBufferedViaServer);
+        photonView.RPC("MakeGhost", RpcTarget.AllBuffered);
     }
 
     [PunRPC]
@@ -60,13 +60,14 @@ public class Bunny : Animal
             this.GetComponent<BunnyController>().enabled = false;
             this.GetComponent<GhostMode>().enabled = true;
             this.GetComponent<BoxCollider>().enabled = true; // collider for ghost mode
+            
             Camera.main.GetComponent<FollowCam>().pitch_min_max.x = -25f;
         }
     }
 
     public void SkewerBunnyWrapper()
     {
-        photonView.RPC("SkewerBunny", RpcTarget.AllBufferedViaServer);
+        photonView.RPC("SkewerBunny", RpcTarget.AllBuffered);
     }
 
     [PunRPC]
