@@ -10,13 +10,27 @@ public class Hunter : MonoBehaviourPun
 {
     [Header("Spear Settings")]
     [SerializeField] GameObject spear_go;
+    [SerializeField] GameObject conjured_spear;
+    public Material conjured_spear_mat;
     private Spear spear;
+    private const string FADE_NAME = "_Fade_Amount";
+    public bool can_conjure = true;
+    [SerializeField] float conjure_transition;
+
+    [Space]
+    [Header("Controller")]
+    [SerializeField] PlayerController controller;
 
     [SerializeField] float throw_power;
     
     [Space]
     [Header("Body Parts")]
     public Transform right_hand;
+
+    [Space]
+    [Header("Audio")]
+    [SerializeField] AudioClip heart_beat;
+    [SerializeField] AudioSource audio_source;
 
     [Space]
     public bool has_spear;
@@ -35,23 +49,24 @@ public class Hunter : MonoBehaviourPun
 
     private void Start()
     {
-        spear = spear_go.GetComponent<Spear>();
+        //spear = spear_go.GetComponent<Spear>();
         particle_seek = trail.GetComponent<ParticleSeek>();
         pp_volume = Camera.main.GetComponent<PostProcessVolume>();
         pp_volume.profile.TryGetSettings(out ca_layer);
         pp_volume.profile.TryGetSettings(out lens_distortion_layer);
         pp_volume.profile.TryGetSettings(out vignette_layer);
+        conjure_transition = 1f;
     }
 
     private void Update()
     {
         if (PhotonNetwork.IsMasterClient && photonView.IsMine)
         {
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                //ReturnSpear(spear_go);
-                photonView.RPC("ReturnSpear", RpcTarget.All);
-            }
+            //if (Input.GetKeyDown(KeyCode.R))
+            //{
+            //    //ReturnSpear(spear_go);
+            //    photonView.RPC("ReturnSpear", RpcTarget.All);
+            //}
             if (Input.GetKey(KeyCode.Q)) //&& photonView.IsMine)
             {
                 trail.Play();
@@ -59,13 +74,18 @@ public class Hunter : MonoBehaviourPun
             }
             else
             {
+                audio_source.Stop();
                 trail.Stop();
                 is_hunter_mode = false;
+            }
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                audio_source.clip = heart_beat;
+                audio_source.Play();
             }
             // Hunter Sense
             HunterSense(is_hunter_mode);
         }
-        
     }
 
     private void HunterSense(bool state)
@@ -96,17 +116,97 @@ public class Hunter : MonoBehaviourPun
         vignette_layer.intensity.value = Mathf.Lerp(vig2, vig, transition);
     }
 
+    public void CreateSpearWrapper()
+    {
+        photonView.RPC("CreateSpear", RpcTarget.All);
+        //CreateSpear();
+    }
+
+    [PunRPC]
+    public void CreateSpear() // create a spear at the Hunter's hand across the network
+    {
+        conjured_spear = Instantiate(spear_go, right_hand.position, Quaternion.identity); // create a new spear
+        conjured_spear.transform.up = right_hand.forward;
+        conjured_spear.transform.SetParent(right_hand);
+        conjured_spear_mat = conjured_spear.GetComponent<Renderer>().material;
+        conjured_spear_mat.SetFloat(FADE_NAME, 1);
+        spear = conjured_spear.GetComponent<Spear>();
+        has_spear = true;
+    }
+
+    public void FadeInSpearWrapper()
+    {
+        photonView.RPC("FadeInSpear", RpcTarget.All);
+        //FadeInSpear();
+    }
+
+    [PunRPC]
+    public void FadeInSpear()
+    {
+        conjure_transition -= Time.deltaTime;
+        conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+        conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+    }
+
+    public void FadeOutSpearWrapper()
+    {
+        photonView.RPC("FadeOutSpear", RpcTarget.All);
+        //FadeOutSpear();
+    }
+
+    [PunRPC]
+    public void FadeOutSpear()
+    {
+        StartCoroutine(SpearFade());
+    }
+
+    private IEnumerator SpearFade()
+    {
+        float duration = 1f; // 1 second
+        float totalTime = 0;
+        while (totalTime <= duration)
+        {
+            totalTime += Time.deltaTime;
+            conjure_transition = totalTime;
+            conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+            conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+            yield return null;
+        }
+        DestroySpearWrapper();
+        conjure_transition = 1;
+    }
+
+    public void DestroySpearWrapper()
+    {
+        photonView.RPC("DestroySpear", RpcTarget.All);
+        //DestroySpear();
+    }
+
+    [PunRPC]
+    public void DestroySpear()
+    {
+        Destroy(conjured_spear);
+        has_spear = false;
+    }
+
     public void ThrowSpear()
     {
         // only start syncronizing the spear RB when it is thrown this prevents the spear from wandering from the hunter's hand on other photon views.
-        spear.GetComponent<PhotonRigidbodyView>().enabled = true; 
-
+        spear.GetComponent<PhotonRigidbodyView>().enabled = true;
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
-        spear.transform.forward = Camera.main.transform.forward;
+        spear.transform.up = Camera.main.transform.forward;
         spear.spear_rb.AddForce(Camera.main.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
         has_spear = false;
+        photonView.RPC("MakeSolid", RpcTarget.All);
+        //MakeSolid();
+    }
+
+    [PunRPC]
+    public void MakeSolid()
+    {
+        conjured_spear_mat.SetFloat(FADE_NAME, 0);
     }
     
     [PunRPC]
@@ -119,6 +219,16 @@ public class Hunter : MonoBehaviourPun
 
         // disable syncronizing the spear RB when it is held, this prevents the spear from wandering from the hunter's hand on other photon views.
         spear.GetComponent<PhotonRigidbodyView>().enabled = false;
+    }
+
+    public void SetConjureTransition(float val)
+    {
+        conjure_transition = val;
+    }
+
+    public float GetConjureTransition()
+    {
+        return conjure_transition;
     }
 
     public void ReturnSpearWrapper()

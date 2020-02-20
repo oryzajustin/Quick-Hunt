@@ -17,6 +17,8 @@ public class Spear : MonoBehaviourPun
     [SerializeField] Transform return_position;
     [SerializeField] GameObject fake_bunny_prefab;
 
+    [SerializeField] float timer = 5.0f;
+
     void Start()
     {
         spear_go = this.gameObject;
@@ -35,6 +37,11 @@ public class Spear : MonoBehaviourPun
         if (can_pick_up)
         {
             spear_damage = 0;
+            timer -= Time.deltaTime;
+            if(timer <= 0)
+            {
+                Destroy(this.gameObject);
+            }
         }
         else
         {
@@ -71,11 +78,11 @@ public class Spear : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "Player" && can_pick_up)
-        {
-            //hunter.ReturnSpear(this.gameObject);
-            hunter.ReturnSpearWrapper();
-            can_pick_up = false;
-        }   
+        //if(other.gameObject.tag == "Player" && can_pick_up)
+        //{
+        //    //hunter.ReturnSpear(this.gameObject);
+        //    hunter.ReturnSpearWrapper();
+        //    can_pick_up = false;
+        //}   
     }
 }

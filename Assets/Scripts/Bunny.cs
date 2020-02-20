@@ -16,6 +16,8 @@ public class Bunny : Animal
 
     public GameObject spear_go;
     [SerializeField] GameObject fake_bunny;
+    [SerializeField] AudioSource audio_source;
+    [SerializeField] AudioClip death_sound;
     private void Start()
     {
         SetHealth(1);
@@ -44,7 +46,7 @@ public class Bunny : Animal
 
     public void MakeGhostWrapper()
     {
-        photonView.RPC("MakeGhost", RpcTarget.AllBuffered);
+        photonView.RPC("MakeGhost", RpcTarget.All);
     }
 
     [PunRPC]
@@ -58,7 +60,8 @@ public class Bunny : Animal
         {
             this.GetComponent<CharacterController>().enabled = false;
             this.GetComponent<BunnyController>().enabled = false;
-            this.GetComponent<GhostMode>().enabled = true;
+            GhostMode spectator = this.GetComponent<GhostMode>();
+            spectator.ActivateSpectate();
             this.GetComponent<BoxCollider>().enabled = true; // collider for ghost mode
             
             Camera.main.GetComponent<FollowCam>().pitch_min_max.x = -25f;
@@ -67,7 +70,7 @@ public class Bunny : Animal
 
     public void SkewerBunnyWrapper()
     {
-        photonView.RPC("SkewerBunny", RpcTarget.AllBuffered);
+        photonView.RPC("SkewerBunny", RpcTarget.All);
     }
 
     [PunRPC]
@@ -75,6 +78,7 @@ public class Bunny : Animal
     {
         Debug.Log("SKEWERED");
         GameObject temp = Instantiate(fake_bunny, spear_go.transform.position, Quaternion.identity);
+        audio_source.PlayOneShot(death_sound, 1f);
         temp.transform.parent = spear_go.transform;
         Vector3 skewer_position = new Vector3(spear_go.transform.position.x, spear_go.transform.position.y - 0.15f, spear_go.transform.position.z);
         temp.transform.position = skewer_position;

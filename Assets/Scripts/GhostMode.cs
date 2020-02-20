@@ -17,6 +17,7 @@ public class GhostMode : MonoBehaviour
     private void Start()
     {
         cam = Camera.main;
+        this.enabled = false;
     }
 
     private void Update()
@@ -57,5 +58,10 @@ public class GhostMode : MonoBehaviour
         {
             transform.position -= cam.transform.up * climb_speed * Time.deltaTime;
         }
+    }
+
+    public void ActivateSpectate()
+    {
+        this.enabled = true;
     }
 }

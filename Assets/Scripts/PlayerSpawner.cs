@@ -13,20 +13,33 @@ public class PlayerSpawner : MonoBehaviourPun
     [SerializeField] Transform spawn_point_player;
     [SerializeField] Transform[] spawn_point_bunny;
 
-    private void Start()
+    private void Awake()
     {
         if (PhotonNetwork.IsMasterClient)
         {
-            
             GameObject player = PhotonNetwork.Instantiate(hunter_prefab.name, spawn_point_player.position, Quaternion.identity);
             //PhotonNetwork.LocalPlayer.TagObject = player;
             follow_cam.target = player.transform.Find("Look_Target");
         }
-        else
+    }
+
+    private void Start()
+    {
+        //if (PhotonNetwork.IsMasterClient)
+        //{
+
+        //    GameObject player = PhotonNetwork.Instantiate(hunter_prefab.name, spawn_point_player.position, Quaternion.identity);
+        //    //PhotonNetwork.LocalPlayer.TagObject = player;
+        //    follow_cam.target = player.transform.Find("Look_Target");
+        //}
+        //else
+        //{
+        if (!PhotonNetwork.IsMasterClient)
         {
             GameObject player = PhotonNetwork.Instantiate(bunny_prefab.name, spawn_point_bunny[Random.Range(0, spawn_point_bunny.Length)].position, Quaternion.identity);
             //PhotonNetwork.LocalPlayer.TagObject = player;
             follow_cam.target = player.transform.Find("Look_Target");
         }
+        //}
     }
 }

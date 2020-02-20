@@ -83,6 +83,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
     {
         waiting_panel.SetActive(false);
         find_players_panel.SetActive(true);
+        //waiting_status_text.text = PhotonNetwork.CurrentRoom.PlayerCount + " Players found!";
         Debug.Log($"Disconnected due to: {cause}");
     }
 
@@ -121,6 +122,11 @@ public class MainMenu : MonoBehaviourPunCallbacks
                 Debug.Log("Lobby is full! Match is ready");
             }
         }
+    }
+
+    public override void OnLeftRoom()
+    {
+        waiting_status_text.text = PhotonNetwork.CurrentRoom.PlayerCount + " Players found!";
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)

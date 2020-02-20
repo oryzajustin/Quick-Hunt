@@ -6,14 +6,23 @@ using DG.Tweening;
 
 public class PlayerController : MonoBehaviourPun
 {
+    [Header("IK/Hunter/Canvas")]
     [SerializeField] Hunter hunter;
     [SerializeField] IKSolver ik_solver;
 
     [SerializeField] Canvas aim_canvas;
 
-    //[SerializeField] Renderer skin;
+    [Space]
+    [Header("Rendering")]
+    [SerializeField] Material disappear_mat;
+    [SerializeField] Material body_mat;
+    [SerializeField] Renderer skin;
+    private float disappear_transition = 0f;
+    [SerializeField] float conjure_transition;
+    private const string FADE_NAME = "_Fade_Amount";
     //[SerializeField] Color skin_color;
 
+    [Space]
     [SerializeField] float walk_speed;
     [SerializeField] float run_speed;
     [SerializeField] float turn_smooth_time;
@@ -49,7 +58,8 @@ public class PlayerController : MonoBehaviourPun
         controller = this.GetComponent<CharacterController>();
         hunter = this.GetComponent<Hunter>();
         ik_solver = this.GetComponent<IKSolver>();
-        //skin_color = skin.material.color;
+        skin.material = body_mat;
+        conjure_transition = 1f;
     }
 
     // Update is called once per frame
@@ -73,23 +83,19 @@ public class PlayerController : MonoBehaviourPun
 
         bool is_running = Input.GetKey(KeyCode.LeftShift); // check if running
 
-        bool is_crouching = Input.GetKey(KeyCode.LeftControl);
+        bool is_crouching = Input.GetKey(KeyCode.LeftControl) && controller.isGrounded;
 
         float target_speed = (is_running ? run_speed : walk_speed) * input_direction.magnitude; // the speed we want to reach
 
         if (is_crouching) // if we are crouching
         {
-            //float see_through = 0.4f;
-            //skin_color.a = see_through;
             if (input_direction != Vector2.zero) // if we have input movement, then move in the walk speed
                 target_speed = walk_speed;
             else
                 target_speed = 0f; // otherwise crouch still
         }
-        else
-        {
-            //skin_color.a = 1f;
-        }
+
+        photonView.RPC("Disappear", RpcTarget.All, is_crouching);
 
         curr_speed = Mathf.SmoothDamp(curr_speed, target_speed, ref speed_smooth_velocity, GetModifiedSmoothTime(speed_smooth_time)); // damp to the target speed from our current speed
 
@@ -118,11 +124,31 @@ public class PlayerController : MonoBehaviourPun
         animation_speed_percent = (is_running ? 1f : 0.5f) * input_direction.magnitude; // handles the animation speed percent
         // Debug.Log(animation_speed_percent);
         animator.SetFloat("speedPercent", animation_speed_percent, speed_smooth_time, Time.deltaTime); // dampen the animation to the target animation
-        
-        
-        if (hunter.has_spear) 
+
+        if (Input.GetMouseButtonDown(1) && hunter.can_conjure)
         {
-            bool is_aiming = Input.GetMouseButton(1);
+            //conjure a spear for the hunter
+            hunter.CreateSpearWrapper();
+        }
+        else if(Input.GetMouseButtonUp(1) && hunter.has_spear)
+        {
+            //deconjure spear
+            //StartCoroutine(Countdown());
+            hunter.FadeOutSpearWrapper();
+        }
+        else if(Input.GetMouseButtonUp(1) && !hunter.has_spear)
+        {
+            //conjure_transition = 1;
+            hunter.SetConjureTransition(1);
+        }
+        bool is_aiming = Input.GetMouseButton(1) && hunter.has_spear;
+        if (is_aiming) 
+        {
+            //conjure_transition -= Time.deltaTime;
+            //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+            //hunter.conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+            hunter.FadeInSpearWrapper();
+
             aim_canvas.gameObject.SetActive(is_aiming);
             bool throw_spear = (is_aiming && Input.GetMouseButtonDown(0));
             animator.SetBool("aiming", is_aiming); // dampen the animation to the target animation
@@ -136,8 +162,38 @@ public class PlayerController : MonoBehaviourPun
             animator.SetBool("aiming", false);
             aim_canvas.gameObject.SetActive(false);
         }
+        //if(conjure_transition == 1)
+        if(hunter.GetConjureTransition() == 1)
+        {
+            hunter.can_conjure = true;
+        }
+        else
+        {
+            hunter.can_conjure = false;
+        }
         
     }
+
+    //private IEnumerator Countdown()
+    //{
+    //    float duration = 1f; // 1 second
+    //    float totalTime = 0;
+    //    while (totalTime <= duration)
+    //    {
+    //        totalTime += Time.deltaTime;
+    //        //conjure_transition = totalTime;
+    //        //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+    //        //hunter.conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+
+    //        hunter.SetConjureTransition(totalTime);
+    //        hunter.SetConjureTransition(Mathf.Clamp(hunter.GetConjureTransition(), 0, 1));
+    //        hunter.conjured_spear_mat.SetFloat(FADE_NAME, hunter.GetConjureTransition());
+    //        yield return null;
+    //    }
+    //    hunter.DestroySpearWrapper();
+    //    //conjure_transition = 1;
+    //    hunter.SetConjureTransition(1);
+    //}
 
     private void Jump()
     {
@@ -159,5 +215,32 @@ public class PlayerController : MonoBehaviourPun
             return float.MaxValue;
         }
         return smooth_time / air_control_percent;
+    }
+
+    [PunRPC]
+    public void Disappear(bool is_crouching) // send material data swap over the network
+    {
+        if (is_crouching)
+        {
+            skin.material = disappear_mat;
+            disappear_transition += Time.deltaTime;
+            disappear_transition = Mathf.Clamp(disappear_transition, 0, 1);
+            skin.material.SetFloat(FADE_NAME, disappear_transition);
+        }
+        else
+        {
+            disappear_transition -= Time.deltaTime;
+            disappear_transition = Mathf.Clamp(disappear_transition, 0, 1);
+            skin.material.SetFloat(FADE_NAME, disappear_transition);
+            if (disappear_transition <= 0)
+            {
+                skin.material = body_mat;
+            }
+        }
+    }
+
+    public void SetConjureTransition(float val)
+    {
+        conjure_transition = val;
     }
 }
