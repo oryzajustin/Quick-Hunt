@@ -17,8 +17,8 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Material disappear_mat;
     [SerializeField] Material body_mat;
     [SerializeField] Renderer skin;
-    private float disappear_transition = 0f;
-    [SerializeField] float conjure_transition;
+    [SerializeField] float disappear_transition;
+    //[SerializeField] float conjure_transition;
     private const string FADE_NAME = "_Fade_Amount";
     //[SerializeField] Color skin_color;
 
@@ -59,7 +59,8 @@ public class PlayerController : MonoBehaviourPun
         hunter = this.GetComponent<Hunter>();
         ik_solver = this.GetComponent<IKSolver>();
         skin.material = body_mat;
-        conjure_transition = 1f;
+        //conjure_transition = 1f;
+        disappear_transition = 0f;
     }
 
     // Update is called once per frame
@@ -87,6 +88,17 @@ public class PlayerController : MonoBehaviourPun
 
         float target_speed = (is_running ? run_speed : walk_speed) * input_direction.magnitude; // the speed we want to reach
 
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            // start cloaking
+            photonView.RPC("HandleHunterCloaking", RpcTarget.All);
+        }
+        else if (Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            // decloak
+            photonView.RPC("HandleHunterDecloaking", RpcTarget.All);
+        }
+
         if (is_crouching) // if we are crouching
         {
             if (input_direction != Vector2.zero) // if we have input movement, then move in the walk speed
@@ -95,7 +107,7 @@ public class PlayerController : MonoBehaviourPun
                 target_speed = 0f; // otherwise crouch still
         }
 
-        photonView.RPC("Disappear", RpcTarget.All, is_crouching);
+        //photonView.RPC("Disappear", RpcTarget.All, is_crouching);
 
         curr_speed = Mathf.SmoothDamp(curr_speed, target_speed, ref speed_smooth_velocity, GetModifiedSmoothTime(speed_smooth_time)); // damp to the target speed from our current speed
 
@@ -125,29 +137,52 @@ public class PlayerController : MonoBehaviourPun
         // Debug.Log(animation_speed_percent);
         animator.SetFloat("speedPercent", animation_speed_percent, speed_smooth_time, Time.deltaTime); // dampen the animation to the target animation
 
-        if (Input.GetMouseButtonDown(1) && hunter.can_conjure)
+        HandleConjure();
+    }
+
+    [PunRPC]
+    private void HandleHunterCloaking()
+    {
+        StartCoroutine(Cloak());
+    }
+
+    [PunRPC]
+    private void HandleHunterDecloaking()
+    {
+        StartCoroutine(Decloak());
+    }
+
+    private void HandleConjure()
+    {
+        if (hunter.GetConjureTransition() == 1)
         {
-            //conjure a spear for the hunter
-            hunter.CreateSpearWrapper();
+            hunter.can_conjure = true;
         }
-        else if(Input.GetMouseButtonUp(1) && hunter.has_spear)
+        else
         {
-            //deconjure spear
-            //StartCoroutine(Countdown());
+            hunter.can_conjure = false;
+        }
+        if (Input.GetMouseButtonDown(1) && hunter.can_conjure) // if you can conjure a spear and start aiming
+        {
+            hunter.CreateSpearWrapper();
+            hunter.FadeInSpearWrapper();
+        }
+        else if (Input.GetMouseButtonUp(1) && hunter.has_spear) // if you never threw the spear and stop aiming
+        {
             hunter.FadeOutSpearWrapper();
         }
-        else if(Input.GetMouseButtonUp(1) && !hunter.has_spear)
-        {
-            //conjure_transition = 1;
-            hunter.SetConjureTransition(1);
-        }
+        //else if (Input.GetMouseButtonUp(1) && !hunter.has_spear) // if you stop aiming and no longer have a spear
+        //{
+        //    //conjure_transition = 1;
+        //    hunter.SetConjureTransitionNetworkWrapper(1f); // set the transition value back to 1
+        //}
         bool is_aiming = Input.GetMouseButton(1) && hunter.has_spear;
-        if (is_aiming) 
+        if (is_aiming)
         {
             //conjure_transition -= Time.deltaTime;
             //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
             //hunter.conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
-            hunter.FadeInSpearWrapper();
+            //hunter.FadeInSpearWrapper();
 
             aim_canvas.gameObject.SetActive(is_aiming);
             bool throw_spear = (is_aiming && Input.GetMouseButtonDown(0));
@@ -159,41 +194,41 @@ public class PlayerController : MonoBehaviourPun
         }
         else
         {
+            //hunter.SetConjureTransition(1);
             animator.SetBool("aiming", false);
             aim_canvas.gameObject.SetActive(false);
         }
         //if(conjure_transition == 1)
-        if(hunter.GetConjureTransition() == 1)
-        {
-            hunter.can_conjure = true;
-        }
-        else
-        {
-            hunter.can_conjure = false;
-        }
-        
     }
 
-    //private IEnumerator Countdown()
-    //{
-    //    float duration = 1f; // 1 second
-    //    float totalTime = 0;
-    //    while (totalTime <= duration)
-    //    {
-    //        totalTime += Time.deltaTime;
-    //        //conjure_transition = totalTime;
-    //        //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
-    //        //hunter.conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
-
-    //        hunter.SetConjureTransition(totalTime);
-    //        hunter.SetConjureTransition(Mathf.Clamp(hunter.GetConjureTransition(), 0, 1));
-    //        hunter.conjured_spear_mat.SetFloat(FADE_NAME, hunter.GetConjureTransition());
-    //        yield return null;
-    //    }
-    //    hunter.DestroySpearWrapper();
-    //    //conjure_transition = 1;
-    //    hunter.SetConjureTransition(1);
-    //}
+    private IEnumerator Cloak()
+    {
+        float duration = 1f; // 1 second
+        float totalTime = 0;
+        while (totalTime <= duration)
+        {
+            totalTime += Time.deltaTime;
+            disappear_transition = totalTime;
+            disappear_transition = Mathf.Clamp(disappear_transition, 0, 1);
+            body_mat.SetFloat(FADE_NAME, disappear_transition);
+            yield return null;
+        }
+        disappear_transition = 1;
+    }
+    private IEnumerator Decloak()
+    {
+        float duration = 0f; 
+        float totalTime = 1f; // 1 second
+        while (totalTime >= duration)
+        {
+            totalTime -= Time.deltaTime;
+            disappear_transition = totalTime;
+            disappear_transition = Mathf.Clamp(disappear_transition, 0, 1);
+            body_mat.SetFloat(FADE_NAME, disappear_transition);
+            yield return null;
+        }
+        disappear_transition = 0;
+    }
 
     private void Jump()
     {
@@ -239,8 +274,8 @@ public class PlayerController : MonoBehaviourPun
         }
     }
 
-    public void SetConjureTransition(float val)
-    {
-        conjure_transition = val;
-    }
+    //public void SetConjureTransition(float val)
+    //{
+    //    conjure_transition = val;
+    //}
 }

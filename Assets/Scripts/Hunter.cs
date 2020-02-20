@@ -131,7 +131,6 @@ public class Hunter : MonoBehaviourPun
         conjured_spear_mat = conjured_spear.GetComponent<Renderer>().material;
         conjured_spear_mat.SetFloat(FADE_NAME, 1);
         spear = conjured_spear.GetComponent<Spear>();
-        has_spear = true;
     }
 
     public void FadeInSpearWrapper()
@@ -143,13 +142,42 @@ public class Hunter : MonoBehaviourPun
     [PunRPC]
     public void FadeInSpear()
     {
-        conjure_transition -= Time.deltaTime;
-        conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
-        conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+        //conjure_transition -= Time.deltaTime;
+        //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+        //conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+        StartCoroutine(SpearFadeIn());
+    }
+
+    public void StopFadeInWrapper()
+    {
+        photonView.RPC("StopFadeIn", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void StopFadeIn()
+    {
+        StopCoroutine(SpearFadeIn());
+    }
+
+    private IEnumerator SpearFadeIn()
+    {
+        float duration = 0;
+        float totalTime = 1; // 1 second
+        while (totalTime >= duration)
+        {
+            totalTime -= Time.deltaTime;
+            conjure_transition = totalTime;
+            conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+            conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
+            yield return null;
+        }
+        has_spear = true;
+        conjure_transition = 0;
     }
 
     public void FadeOutSpearWrapper()
     {
+        has_spear = false;
         photonView.RPC("FadeOutSpear", RpcTarget.All);
         //FadeOutSpear();
     }
@@ -157,10 +185,21 @@ public class Hunter : MonoBehaviourPun
     [PunRPC]
     public void FadeOutSpear()
     {
-        StartCoroutine(SpearFade());
+        StartCoroutine(SpearFadeOut());
     }
 
-    private IEnumerator SpearFade()
+    public void StopFadeOutWrapper()
+    {
+        photonView.RPC("StopFadeOut", RpcTarget.All);
+    }
+
+    [PunRPC]
+    public void StopFadeOut()
+    {
+        StopCoroutine(SpearFadeOut());
+    }
+
+    private IEnumerator SpearFadeOut()
     {
         float duration = 1f; // 1 second
         float totalTime = 0;
@@ -192,21 +231,28 @@ public class Hunter : MonoBehaviourPun
     public void ThrowSpear()
     {
         // only start syncronizing the spear RB when it is thrown this prevents the spear from wandering from the hunter's hand on other photon views.
+        has_spear = false;
         spear.GetComponent<PhotonRigidbodyView>().enabled = true;
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
         spear.transform.up = Camera.main.transform.forward;
         spear.spear_rb.AddForce(Camera.main.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
-        has_spear = false;
         photonView.RPC("MakeSolid", RpcTarget.All);
         //MakeSolid();
+    }
+
+    [PunRPC]
+    public void MakeSolidWrapper()
+    {
+        photonView.RPC("MakeSolid", RpcTarget.All);
     }
 
     [PunRPC]
     public void MakeSolid()
     {
         conjured_spear_mat.SetFloat(FADE_NAME, 0);
+        conjure_transition = 1;
     }
     
     [PunRPC]
@@ -229,6 +275,22 @@ public class Hunter : MonoBehaviourPun
     public float GetConjureTransition()
     {
         return conjure_transition;
+    }
+
+    public GameObject GetConjuredSpear()
+    {
+        return conjured_spear;
+    }
+
+    public void SetConjureTransitionNetworkWrapper(float val)
+    {
+        photonView.RPC("SetConjureTransitionNetwork", RpcTarget.All, val);
+    }
+
+    [PunRPC]
+    public void SetConjureTransitionNetwork(float val)
+    {
+        conjure_transition = val;
     }
 
     public void ReturnSpearWrapper()
