@@ -167,10 +167,10 @@ public class PlayerController : MonoBehaviourPun
             hunter.CreateSpearWrapper();
             hunter.FadeInSpearWrapper();
         }
-        else if (Input.GetMouseButtonUp(1) && hunter.has_spear) // if you never threw the spear and stop aiming
-        {
-            hunter.FadeOutSpearWrapper();
-        }
+        //else if (Input.GetMouseButtonUp(1) && hunter.has_spear) // if you never threw the spear and stop aiming
+        //{
+        //    hunter.FadeOutSpearWrapper();
+        //}
         //else if (Input.GetMouseButtonUp(1) && !hunter.has_spear) // if you stop aiming and no longer have a spear
         //{
         //    //conjure_transition = 1;

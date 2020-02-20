@@ -125,9 +125,13 @@ public class Hunter : MonoBehaviourPun
     [PunRPC]
     public void CreateSpear() // create a spear at the Hunter's hand across the network
     {
-        conjured_spear = Instantiate(spear_go, right_hand.position, Quaternion.identity); // create a new spear
+        conjured_spear = PhotonNetwork.InstantiateSceneObject(spear_go.name, right_hand.position, Quaternion.identity); // create a new spear
         conjured_spear.transform.up = right_hand.forward;
         conjured_spear.transform.SetParent(right_hand);
+
+        // disable syncronizing the spear RB when it is held, this prevents the spear from wandering from the hunter's hand on other photon views.
+        conjured_spear.GetComponent<PhotonRigidbodyView>().enabled = false;
+
         conjured_spear_mat = conjured_spear.GetComponent<Renderer>().material;
         conjured_spear_mat.SetFloat(FADE_NAME, 1);
         spear = conjured_spear.GetComponent<Spear>();
@@ -236,8 +240,11 @@ public class Hunter : MonoBehaviourPun
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
-        spear.transform.up = Camera.main.transform.forward;
-        spear.spear_rb.AddForce(Camera.main.transform.forward * throw_power + transform.up * 2, ForceMode.Impulse);
+        if (PhotonNetwork.IsMasterClient) // throw from the master's pov
+        {
+            spear.transform.up = Camera.main.transform.forward;
+            spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse);
+        }
         photonView.RPC("MakeSolid", RpcTarget.All);
         //MakeSolid();
     }

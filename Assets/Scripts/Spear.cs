@@ -37,11 +37,11 @@ public class Spear : MonoBehaviourPun
         if (can_pick_up)
         {
             spear_damage = 0;
-            timer -= Time.deltaTime;
-            if(timer <= 0)
-            {
-                Destroy(this.gameObject);
-            }
+            //timer -= Time.deltaTime;
+            //if (timer <= 0)
+            //{
+            //    Destroy(this.gameObject);
+            //}
         }
         else
         {
@@ -74,15 +74,24 @@ public class Spear : MonoBehaviourPun
                 bunny.Die();
             }
         }
+        photonView.RPC("FadeOut", RpcTarget.All);
     }
 
-    private void OnTriggerEnter(Collider other)
+    [PunRPC]
+    public void FadeOut()
     {
-        //if(other.gameObject.tag == "Player" && can_pick_up)
-        //{
-        //    //hunter.ReturnSpear(this.gameObject);
-        //    hunter.ReturnSpearWrapper();
-        //    can_pick_up = false;
-        //}   
+        StartCoroutine(SpearFadeOut());
+    }
+
+    private IEnumerator SpearFadeOut()
+    {
+        float duration = 5f; // 5 seconds
+        float totalTime = 0;
+        while (totalTime <= duration)
+        {
+            totalTime += Time.deltaTime;
+            yield return null;
+        }
+        Destroy(this.gameObject);
     }
 }
