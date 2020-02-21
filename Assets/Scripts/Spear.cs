@@ -13,6 +13,9 @@ public class Spear : MonoBehaviourPun
 
     public int spear_damage;
 
+    private Material spear_material;
+    private const string FADE_NAME = "_Fade_Amount";
+
     [SerializeField] Hunter hunter;
     [SerializeField] Transform return_position;
     [SerializeField] GameObject fake_bunny_prefab;
@@ -30,6 +33,7 @@ public class Spear : MonoBehaviourPun
             this.GetComponent<PhotonRigidbodyView>().enabled = false;
         }
         return_position = hunter.right_hand;
+        spear_material = this.GetComponent<Renderer>().material;
     }
 
     void Update()
@@ -74,22 +78,42 @@ public class Spear : MonoBehaviourPun
                 bunny.Die();
             }
         }
-        photonView.RPC("FadeOut", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("FadeOut", RpcTarget.All);
+        }
+        
     }
 
     [PunRPC]
     public void FadeOut()
     {
-        StartCoroutine(SpearFadeOut());
+        StartCoroutine(Wait());
     }
 
-    private IEnumerator SpearFadeOut()
+    private IEnumerator Wait()
     {
         float duration = 5f; // 5 seconds
         float totalTime = 0;
         while (totalTime <= duration)
         {
             totalTime += Time.deltaTime;
+            yield return null;
+        }
+        StartCoroutine(SpearFadeOut());
+    }
+
+    private IEnumerator SpearFadeOut()
+    {
+        float conjure_transition;
+        float duration = 1f; // 1 second fade
+        float totalTime = 0;
+        while (totalTime <= duration)
+        {
+            totalTime += Time.deltaTime;
+            conjure_transition = totalTime;
+            conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
+            spear_material.SetFloat(FADE_NAME, conjure_transition);
             yield return null;
         }
         Destroy(this.gameObject);

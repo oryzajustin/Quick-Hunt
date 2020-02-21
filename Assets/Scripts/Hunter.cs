@@ -5,6 +5,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine.Rendering.PostProcessing;
 using DG.Tweening;
+using ExitGames.Client.Photon;
 
 public class Hunter : MonoBehaviourPun
 {
@@ -16,6 +17,8 @@ public class Hunter : MonoBehaviourPun
     private const string FADE_NAME = "_Fade_Amount";
     public bool can_conjure = true;
     [SerializeField] float conjure_transition;
+    private const int throw_event = 1;
+    private Vector3 master_cam_forward;
 
     [Space]
     [Header("Controller")]
@@ -118,28 +121,32 @@ public class Hunter : MonoBehaviourPun
 
     public void CreateSpearWrapper()
     {
-        photonView.RPC("CreateSpear", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("CreateSpear", RpcTarget.All);
+        }
         //CreateSpear();
     }
 
     [PunRPC]
     public void CreateSpear() // create a spear at the Hunter's hand across the network
     {
-        conjured_spear = PhotonNetwork.InstantiateSceneObject(spear_go.name, right_hand.position, Quaternion.identity); // create a new spear
+        conjured_spear = Instantiate(spear_go, right_hand.position, Quaternion.identity); // create a new spear
         conjured_spear.transform.up = right_hand.forward;
         conjured_spear.transform.SetParent(right_hand);
-
-        // disable syncronizing the spear RB when it is held, this prevents the spear from wandering from the hunter's hand on other photon views.
-        conjured_spear.GetComponent<PhotonRigidbodyView>().enabled = false;
 
         conjured_spear_mat = conjured_spear.GetComponent<Renderer>().material;
         conjured_spear_mat.SetFloat(FADE_NAME, 1);
         spear = conjured_spear.GetComponent<Spear>();
+
+        // disable syncronizing the spear RB when it is held, this prevents the spear from wandering from the hunter's hand on other photon views.
+        conjured_spear.GetComponent<PhotonRigidbodyView>().enabled = false;
     }
 
     public void FadeInSpearWrapper()
     {
-        photonView.RPC("FadeInSpear", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC("FadeInSpear", RpcTarget.All);
         //FadeInSpear();
     }
 
@@ -154,7 +161,8 @@ public class Hunter : MonoBehaviourPun
 
     public void StopFadeInWrapper()
     {
-        photonView.RPC("StopFadeIn", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC("StopFadeIn", RpcTarget.All);
     }
 
     [PunRPC]
@@ -182,7 +190,8 @@ public class Hunter : MonoBehaviourPun
     public void FadeOutSpearWrapper()
     {
         has_spear = false;
-        photonView.RPC("FadeOutSpear", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC("FadeOutSpear", RpcTarget.All);
         //FadeOutSpear();
     }
 
@@ -194,7 +203,8 @@ public class Hunter : MonoBehaviourPun
 
     public void StopFadeOutWrapper()
     {
-        photonView.RPC("StopFadeOut", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC("StopFadeOut", RpcTarget.All);
     }
 
     [PunRPC]
@@ -221,7 +231,8 @@ public class Hunter : MonoBehaviourPun
 
     public void DestroySpearWrapper()
     {
-        photonView.RPC("DestroySpear", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+            photonView.RPC("DestroySpear", RpcTarget.All);
         //DestroySpear();
     }
 
@@ -240,16 +251,28 @@ public class Hunter : MonoBehaviourPun
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
-        if (PhotonNetwork.IsMasterClient) // throw from the master's pov
+        if (PhotonNetwork.IsMasterClient)
         {
-            spear.transform.up = Camera.main.transform.forward;
-            spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse);
+            photonView.RPC("MasterCameraForward", RpcTarget.All, Camera.main.transform.forward);
+            //photonView.RPC("ApplyForceToSpear", RpcTarget.All);
+            photonView.RPC("MakeSolid", RpcTarget.All);
         }
-        photonView.RPC("MakeSolid", RpcTarget.All);
-        //MakeSolid();
+        spear.transform.up = master_cam_forward;
+        spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse);
     }
 
     [PunRPC]
+    public void MasterCameraForward(Vector3 forward)
+    {
+        master_cam_forward = forward;
+    }
+
+    [PunRPC]
+    public void ApplyForceToSpear()
+    {
+        spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse);
+    }
+
     public void MakeSolidWrapper()
     {
         photonView.RPC("MakeSolid", RpcTarget.All);
