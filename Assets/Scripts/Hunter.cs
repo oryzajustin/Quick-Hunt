@@ -19,6 +19,7 @@ public class Hunter : MonoBehaviourPun
     [SerializeField] float conjure_transition;
     private const int throw_event = 1;
     private Vector3 master_cam_forward;
+    private Vector3 throw_direction;
 
     [Space]
     [Header("Controller")]
@@ -251,20 +252,37 @@ public class Hunter : MonoBehaviourPun
         spear.spear_rb.isKinematic = false;
         spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         spear.spear_rb.transform.parent = null;
+
         if (PhotonNetwork.IsMasterClient)
         {
-            photonView.RPC("MasterCameraForward", RpcTarget.All, Camera.main.transform.forward);
+            Ray ray_origin = new Ray(Camera.main.transform.position, Camera.main.transform.forward); // ray from origin of camera (center) out forward
+            RaycastHit hit;
+            Vector3 direction;
+            //Raycast to get a point to throw to
+            if (Physics.Raycast(ray_origin, out hit, 9))
+            {
+                direction = hit.point - spear.transform.position; // throw direction to the ray intersection point
+                Debug.Log(hit.point);
+            }
+            else
+            {
+                direction = ray_origin.GetPoint(10000f) - spear.transform.position; // throw forward towards 10,000 units out
+            }
+            
+            photonView.RPC("MasterThrowDirection", RpcTarget.All, direction.normalized);
             //photonView.RPC("ApplyForceToSpear", RpcTarget.All);
             photonView.RPC("MakeSolid", RpcTarget.All);
         }
-        spear.transform.up = master_cam_forward;
-        spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse);
+        //spear.transform.up = master_cam_forward;
+        spear.transform.up = throw_direction;
+        //spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse); // apply force
+        spear.spear_rb.AddForce(throw_direction * throw_power, ForceMode.Impulse);
     }
 
     [PunRPC]
-    public void MasterCameraForward(Vector3 forward)
+    public void MasterThrowDirection(Vector3 direction)
     {
-        master_cam_forward = forward;
+        throw_direction = direction;
     }
 
     [PunRPC]
