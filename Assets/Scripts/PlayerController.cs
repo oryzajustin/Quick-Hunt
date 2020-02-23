@@ -162,31 +162,21 @@ public class PlayerController : MonoBehaviourPun
         {
             hunter.can_conjure = false;
         }
+
         if (Input.GetMouseButtonDown(1) && hunter.can_conjure) // if you can conjure a spear and start aiming
         {
             hunter.CreateSpearWrapper();
             hunter.FadeInSpearWrapper();
         }
-        //else if (Input.GetMouseButtonUp(1) && hunter.has_spear) // if you never threw the spear and stop aiming
-        //{
-        //    hunter.FadeOutSpearWrapper();
-        //}
-        //else if (Input.GetMouseButtonUp(1) && !hunter.has_spear) // if you stop aiming and no longer have a spear
-        //{
-        //    //conjure_transition = 1;
-        //    hunter.SetConjureTransitionNetworkWrapper(1f); // set the transition value back to 1
-        //}
+
         bool is_aiming = Input.GetMouseButton(1) && hunter.has_spear;
         if (is_aiming)
         {
-            //conjure_transition -= Time.deltaTime;
-            //conjure_transition = Mathf.Clamp(conjure_transition, 0, 1);
-            //hunter.conjured_spear_mat.SetFloat(FADE_NAME, conjure_transition);
-            //hunter.FadeInSpearWrapper();
-
             aim_canvas.gameObject.SetActive(is_aiming);
+
             bool throw_spear = (is_aiming && Input.GetMouseButtonDown(0));
             animator.SetBool("aiming", is_aiming); // dampen the animation to the target animation
+
             if (throw_spear)
             {
                 animator.SetTrigger("throw");
@@ -194,11 +184,9 @@ public class PlayerController : MonoBehaviourPun
         }
         else
         {
-            //hunter.SetConjureTransition(1);
             animator.SetBool("aiming", false);
             aim_canvas.gameObject.SetActive(false);
         }
-        //if(conjure_transition == 1)
     }
 
     private IEnumerator Cloak()
@@ -273,9 +261,4 @@ public class PlayerController : MonoBehaviourPun
             }
         }
     }
-
-    //public void SetConjureTransition(float val)
-    //{
-    //    conjure_transition = val;
-    //}
 }

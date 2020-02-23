@@ -246,37 +246,40 @@ public class Hunter : MonoBehaviourPun
 
     public void ThrowSpear()
     {
-        // only start syncronizing the spear RB when it is thrown this prevents the spear from wandering from the hunter's hand on other photon views.
-        has_spear = false;
-        spear.GetComponent<PhotonRigidbodyView>().enabled = true;
-        spear.spear_rb.isKinematic = false;
-        spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-        spear.spear_rb.transform.parent = null;
-
-        if (PhotonNetwork.IsMasterClient)
+        if(conjured_spear != null) // bug fix
         {
-            Ray ray_origin = new Ray(Camera.main.transform.position, Camera.main.transform.forward); // ray from origin of camera (center) out forward
-            RaycastHit hit;
-            Vector3 direction;
-            //Raycast to get a point to throw to
-            if (Physics.Raycast(ray_origin, out hit, 9))
+            // only start syncronizing the spear RB when it is thrown this prevents the spear from wandering from the hunter's hand on other photon views.
+            has_spear = false;
+            spear.GetComponent<PhotonRigidbodyView>().enabled = true;
+            spear.spear_rb.isKinematic = false;
+            spear.spear_rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            spear.spear_rb.transform.parent = null;
+
+            if (PhotonNetwork.IsMasterClient)
             {
-                direction = hit.point - spear.transform.position; // throw direction to the ray intersection point
-                Debug.Log(hit.point);
+                Ray ray_origin = new Ray(Camera.main.transform.position, Camera.main.transform.forward); // ray from origin of camera (center) out forward
+                RaycastHit hit;
+                Vector3 direction;
+                //Raycast to get a point to throw to
+                if (Physics.Raycast(ray_origin, out hit, 9))
+                {
+                    direction = hit.point - spear.transform.position; // throw direction to the ray intersection point
+                    Debug.Log(hit.point);
+                }
+                else
+                {
+                    direction = ray_origin.GetPoint(10000f) - spear.transform.position; // throw forward towards 10,000 units out
+                }
+
+                photonView.RPC("MasterThrowDirection", RpcTarget.All, direction.normalized);
+                //photonView.RPC("ApplyForceToSpear", RpcTarget.All);
+                photonView.RPC("MakeSolid", RpcTarget.All);
             }
-            else
-            {
-                direction = ray_origin.GetPoint(10000f) - spear.transform.position; // throw forward towards 10,000 units out
-            }
-            
-            photonView.RPC("MasterThrowDirection", RpcTarget.All, direction.normalized);
-            //photonView.RPC("ApplyForceToSpear", RpcTarget.All);
-            photonView.RPC("MakeSolid", RpcTarget.All);
+            //spear.transform.up = master_cam_forward;
+            spear.transform.up = throw_direction;
+            //spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse); // apply force
+            spear.spear_rb.AddForce(throw_direction * throw_power, ForceMode.Impulse);
         }
-        //spear.transform.up = master_cam_forward;
-        spear.transform.up = throw_direction;
-        //spear.spear_rb.AddForce(spear.transform.up * throw_power + transform.up * 2, ForceMode.Impulse); // apply force
-        spear.spear_rb.AddForce(throw_direction * throw_power, ForceMode.Impulse);
     }
 
     [PunRPC]

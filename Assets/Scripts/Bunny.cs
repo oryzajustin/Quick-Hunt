@@ -46,7 +46,10 @@ public class Bunny : Animal
 
     public void MakeGhostWrapper()
     {
-        photonView.RPC("MakeGhost", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("MakeGhost", RpcTarget.All);
+        }
     }
 
     [PunRPC]
@@ -70,7 +73,10 @@ public class Bunny : Animal
 
     public void SkewerBunnyWrapper()
     {
-        photonView.RPC("SkewerBunny", RpcTarget.All);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            photonView.RPC("SkewerBunny", RpcTarget.All);
+        }
     }
 
     [PunRPC]

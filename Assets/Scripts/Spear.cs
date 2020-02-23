@@ -41,11 +41,6 @@ public class Spear : MonoBehaviourPun
         if (can_pick_up)
         {
             spear_damage = 0;
-            //timer -= Time.deltaTime;
-            //if (timer <= 0)
-            //{
-            //    Destroy(this.gameObject);
-            //}
         }
         else
         {
